@@ -6,7 +6,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-# 候选解释及对应的动作数 (保持不变)
 CANDIDATE_EXPLANATIONS = [
     "", "自由基中和", "抗氧化", "自由基中和 抗氧化", "抗氧化 自由基中和", "其他"
 ]
@@ -47,10 +46,6 @@ class AntioxidantRLEnv(gym.Env):
         return state.astype(np.float32)
 
     def step(self, action):
-        # action 是一个字典: {"class": predicted_class_idx, "explanation": explanation_idx}
-        
-        # 【关键修改】RL奖励函数解耦
-        # 不再使用 baseline_model 的 confidence 来缩放奖励
         
         is_correct = (action["class"] == self.current_label)
         
@@ -59,17 +54,7 @@ class AntioxidantRLEnv(gym.Env):
             reward_class = 1.0  # 正确分类奖励
         else:
             reward_class = -1.0 # 错误分类惩罚
-            # 可以考虑对高置信度错误给予更大惩罚，但这需要获取置信度
-            # 如果需要，可以从 baseline_model 重新获取 logits 并计算置信度，但这里我们先简化
-            # self.baseline_model.eval()
-            # with torch.no_grad():
-            #     device = next(self.baseline_model.parameters()).device
-            #     feature_tensor = torch.tensor(self.features[self.current_idx], dtype=torch.float32).unsqueeze(0).to(device)
-            #     raw_logits = self.baseline_model(feature_tensor)
-            #     prob_predicted_class = torch.sigmoid(raw_logits.squeeze()) if action["class"] == 1 else 1 - torch.sigmoid(raw_logits.squeeze())
-            #     if prob_predicted_class.item() > 0.8: # 如果对错误分类非常自信
-            #         reward_class -= 0.5 # 额外惩罚
-
+           
         # 解释奖励 (与原逻辑相同或可调整)
         explanation_text = CANDIDATE_EXPLANATIONS[action["explanation"]]
         count_keywords = 0
