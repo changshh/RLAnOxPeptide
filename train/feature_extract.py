@@ -6,24 +6,13 @@ import random
 import pandas as pd
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from sklearn.model_selection import train_test_split
-# from sklearn.preprocessing import StandardScaler # 不再使用 StandardScaler
-from sklearn.preprocessing import RobustScaler # 导入 RobustScaler
+from sklearn.preprocessing import RobustScaler 
 import torch
 from transformers import T5EncoderModel, T5Tokenizer 
 
-# ProtT5Model, load_fasta, load_fasta_with_labels, 
-# compute_amino_acid_composition, compute_reducing_aa_ratio, 
-# compute_physicochemical_properties, compute_electronic_features,
-# compute_dimer_frequency, positional_encoding, perturb_sequence,
-# generate_adversarial_samples, extract_features 函数与您之前提供的版本相同。
-# 为保持简洁，此处省略这些函数的代码。请确保它们在您的文件中是完整的。
-# 您可以从之前的日志或您本地的文件中复制这些函数。
-# 以下是 prepare_features 函数的修改版，以及其他函数的占位符。
 
 class ProtT5Model:
-    """
-    从本地加载 ProtT5 模型。如果 finetuned_model_file 不为空，则加载微调后的权重（使用 strict=False）。
-    """
+  
     def __init__(self, model_path, finetuned_model_file=None):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         # 尝试加载本地文件，如果失败，transformers库可能会尝试从hub下载（取决于配置）
@@ -50,10 +39,6 @@ class ProtT5Model:
     def encode(self, sequence):
         if not sequence or not isinstance(sequence, str): # 增加对空序列或非字符串的检查
             print(f"警告: ProtT5Model.encode 接收到无效序列: {sequence}")
-            # 返回一个零向量或根据需要处理错误
-            # 假设 ProtT5 输出维度为 1024 (embedding.shape[1])
-            # 假设序列处理后平均池化，所以返回 (1024,)
-            # 但 encode 返回的是 (seq_len, hidden_dim)，所以这里返回一个模拟的短序列零嵌入
             return np.zeros((1, 1024), dtype=np.float32) # (1, hidden_dim)
 
         seq_spaced = " ".join(list(sequence)) # 修改变量名以避免覆盖外部seq
@@ -75,11 +60,6 @@ class ProtT5Model:
         if emb.shape[0] == 0: # 如果由于某种原因序列长度为0
              return np.zeros((1, 1024), dtype=np.float32)
         return emb
-
-# --- (此处应包含您之前版本中所有其他的特征提取辅助函数) ---
-# load_fasta, load_fasta_with_labels, compute_amino_acid_composition, ... extract_features
-# 为确保完整性，请从您本地的 feature_extract.py 文件中复制这些函数到这里。
-# 下面是这些函数的一个简化占位符，您需要用实际的函数替换它们。
 
 def load_fasta(fasta_file):
     # (您的 load_fasta 实现)
@@ -289,8 +269,7 @@ def prepare_features(neg_fasta, pos_fasta, prott5_model_path, additional_params=
     
     return X_train_scaled, X_val_scaled, np.array(train_labels), np.array(val_labels), scaler
 
-if __name__ == "__main__":
-    # 确保测试时使用的路径是有效的，或者创建虚拟文件
+if __name__ == "__main__"
     neg_fasta_test = "dummy_data/test_neg.fasta"
     pos_fasta_test = "dummy_data/test_pos.fasta"
     prott5_path_test = "dummy_prott5_model/" # 需要一个包含config.json, pytorch_model.bin等的目录结构
@@ -303,16 +282,11 @@ if __name__ == "__main__":
     if not os.path.exists(pos_fasta_test):
         with open(pos_fasta_test, "w") as f: f.write(">pos1\nAOPPEPTIDE\n>pos2\nTRYTRYTRY\n")
     
-    # 为了让ProtT5Model能加载，需要模拟一个最小的transformers模型目录结构
-    # 通常至少需要 config.json, pytorch_model.bin (或 tf_model.h5), tokenizer_config.json, spiece.model
-    # 这里我们只创建目录，实际加载可能会失败，除非transformers库能从模型名下载
-    # 或者您提供一个真实的本地ProtT5模型路径
+
     if not os.listdir(prott5_path_test): # 如果目录为空
         print(f"警告: {prott5_path_test} 为空。ProtT5Model可能尝试从HuggingFace Hub下载模型。")
         print(f"请确保您已下载Rostlab/ProstT5-XL-UniRef50或类似模型到该路径，或使用其HuggingFace名称。")
-        # 作为演示，我们假设用户会提供一个有效的路径或transformers可以处理它
-        # 如果要完全本地运行而不下载，需要填充该目录。
-
+      
     additional_params_test = {
         "augment": False, 
         "perturb_rate": 0.1, 
