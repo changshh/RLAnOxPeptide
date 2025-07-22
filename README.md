@@ -12,7 +12,9 @@ Predict the antioxidant activity of their own peptide sequences.
 
 Generate novel antioxidant peptides with desired characteristics.
 
-This user-friendly interface, hosted on Hugging Face Spaces, allows for seamless interaction with the underlying model, making the advanced capabilities of RLAnOxPeptide accessible to a broad scientific community.
+Of course, here is the English version of the text:
 
-The development of RLAnOxPeptide marks a significant step forward in the application of artificial intelligence to peptide engineering. By providing a robust and efficient platform for both prediction and de novo design, it holds the promise of unlocking new frontiers in the development of next-generation antioxidant therapies and health-promoting ingredients.
-Online Demo: https://huggingface.co/spaces/chshan/RLAnOxPeptide
+This user-friendly interface, hosted on Hugging Face Spaces, allows for seamless interaction with the RLAnOxPeptide model, making its advanced capabilities accessible to the broad scientific community. The platform provides a powerful and efficient tool for the prediction and de novo design of antioxidant peptides, holding the promise of opening new frontiers in the development of next-generation antioxidant therapies and functional health ingredients.
+
+Both the online demo platform and the model weights are available at the following Hugging Face link:
+https://huggingface.co/spaces/chshan/RLAnOxPeptide
