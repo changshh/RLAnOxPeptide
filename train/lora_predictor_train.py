@@ -15,7 +15,6 @@ from peft import PeftModel
 
 # 确保所有自定义模块都可以被导入
 try:
-    # 这里的导入现在是必需的，因为我们要使用这些类和函数
     from feature_extract import extract_features, load_fasta_with_labels
     from antioxidant_predictor_5 import AntioxidantPredictor
     from rl_policy_try import RLPolicyNetwork, AntioxidantRLEnv
@@ -24,8 +23,6 @@ except ImportError as e:
     print(f"导入模块失败，请确保所有依赖的.py文件都在当前目录: {e}")
     exit()
 
-# =====================================================================================
-# 1. 关键的重构部分：特征提取器 和 数据准备函数
 # =====================================================================================
 
 class LoRAProtT5Extractor:
@@ -54,10 +51,6 @@ class LoRAProtT5Extractor:
         return embedding.squeeze(0).cpu().numpy()
 
 def prepare_features_with_lora(neg_fasta, pos_fasta, prott5_extractor_instance):
-    """
-    重构后的特征准备函数，直接接收一个已实例化的特征提取器。
-    (此函数逻辑基于您原始的 feature_extract.py 中的 prepare_features)
-    """
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import RobustScaler
     import random
@@ -100,9 +93,6 @@ def prepare_features_with_lora(neg_fasta, pos_fasta, prott5_extractor_instance):
     return X_train_scaled, X_val_scaled, np.array(train_labels), np.array(val_labels), scaler
 
 
-# =====================================================================================
-# 2. 从 predictor_train.py 复制过来的辅助函数和类
-# (为保证脚本独立性，将它们全部放在这里)
 # =====================================================================================
 class TemperatureCalibrator:
     def __init__(self, model, device): self.model = model; self.device = device
@@ -147,8 +137,6 @@ def supervised_training(X_train, y_train, X_val, y_val, params, calibrate_temp=T
     val_metrics = evaluate_model_with_threshold_custom(model, X_val, y_val, params["threshold"])
     return model, val_metrics
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# +++ 核心修改：从主训练脚本中完整复制 rl_joint_training 函数 +++
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def rl_joint_training(X_train_rl, y_train_rl, X_val_rl, y_val_rl, base_classifier_params, rl_params, calibrate_temp_after_rl=True):
     device = base_classifier_params["device"]; input_dim = X_train_rl.shape[1]
@@ -218,9 +206,6 @@ def rl_joint_training(X_train_rl, y_train_rl, X_val_rl, y_val_rl, base_classifie
     
     return model, policy_net
 
-
-# =====================================================================================
-# 3. 主执行流程
 # =====================================================================================
 def main(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -268,8 +253,6 @@ def main(args):
     print(f"最终策略网络已保存至: {final_policy_path}")
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # +++ 核心补充：加载独立测试集并评估最终模型效果 +++
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     print("\n=== 步骤 4: 在独立测试集上评估最终模型 ===")
     if os.path.exists(args.independent_test_fasta):
         print(f"正在加载独立测试集: {args.independent_test_fasta}")
@@ -300,14 +283,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="使用LoRA微调后的ProtT5训练预测器。")
     
     # --- 路径参数 ---
-    parser.add_argument("--base_model_path", type=str, default="/root/shared-nvme/chshhan/diffusion/prott5/model/", help="原始ProtT5模型目录。")
+    parser.add_argument("--base_model_path", type=str, default="./prott5/model/", help="原始ProtT5模型目录。")
     parser.add_argument("--lora_adapter_path", type=str, default="./lora_finetuned_prott5", help="已保存的LoRA适配器目录。")
-    parser.add_argument("--neg_fasta_path", type=str, default="/root/shared-nvme/chshhan/diffusion/2_11rl_new/2_7rl_env/clean_data/remaining_negative.fasta")
-    parser.add_argument("--pos_fasta_path", type=str, default="/root/shared-nvme/chshhan/diffusion/2_11rl_new/2_7rl_env/clean_data/remaining_positive.fasta")
+    parser.add_argument("--neg_fasta_path", type=str, default="./data/remaining_negative.fasta")
+    parser.add_argument("--pos_fasta_path", type=str, default="./data/remaining_positive.fasta")
     parser.add_argument("--output_dir", type=str, default="./predictor_with_lora_checkpoints", help="保存最终预测器和相关文件的目录。")
     
     # 新增的独立测试集路径参数
-    parser.add_argument("--independent_test_fasta", type=str, default="/root/shared-nvme/chshhan/diffusion/2_11rl_new/2_7rl_env/clean_data/independent_test_cleaned.fasta", help="用于最终评估的独立测试集FASTA文件。")
+    parser.add_argument("--independent_test_fasta", type=str, default="./data/independent_test_cleaned.fasta", help="用于最终评估的独立测试集FASTA文件。")
     
     args = parser.parse_args()
     main(args)
