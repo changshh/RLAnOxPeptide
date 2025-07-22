@@ -142,8 +142,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="使用LoRA对ProtT5模型进行参数高效性微调（MLM任务）。")
     
-    parser.add_argument("--base_model_path", type=str, default="/root/shared-nvme/chshhan/diffusion/prott5/model/", help="存放【原始】ProtT5模型文件的目录路径。")
-    parser.add_argument("--dataset_path", type=str, default="/root/shared-nvme/chshhan/diffusion/2_5rl_env/AODB_PROTEIN.csv", help="用于微调的蛋白质序列CSV文件路径。")
+    parser.add_argument("--base_model_path", type=str, default="./prott5/model/", help="存放【原始】ProtT5模型文件的目录路径。")
+    parser.add_argument("--dataset_path", type=str, default="./data/AODB_PROTEIN.csv", help="用于微调的蛋白质序列CSV文件路径。")
     
     # --- (!! 关键修改点 !!) ---
     # 将 add_button 修正为正确的 add_argument
