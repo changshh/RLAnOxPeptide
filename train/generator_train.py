@@ -315,11 +315,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="使用LoRA微调后的ProtT5作为骨干进行序列生成训练。")
     
     # --- 路径参数 ---
-    parser.add_argument("--base_model_path", type=str, default="/root/shared-nvme/chshhan/diffusion/prott5/model/")
+    parser.add_argument("--base_model_path", type=str, default="./prott5/model/")
     parser.add_argument("--lora_adapter_path", type=str, default="./lora_finetuned_prott5")
-    parser.add_argument("--classifier_model_path", type=str, default="/./predictor_with_lora_checkpoints/final_predictor_with_lora.pth")
+    parser.add_argument("--classifier_model_path", type=str, default="./predictor_with_lora_checkpoints/final_predictor_with_lora.pth")
     parser.add_argument("--scaler_path", type=str, default="./predictor_with_lora_checkpoints/scaler_lora.pkl")
-    parser.add_argument("--train_peptides_fasta", type=str, default="/root/shared-nvme/chshhan/diffusion/2_11rl_new/2_7rl_env/clean_data/clean_positive.fasta")
+    parser.add_argument("--train_peptides_fasta", type=str, default="./data/remaining_positive.fasta")
     parser.add_argument("--output_dir", type=str, default="./generator_with_lora_output")
     
     # --- 训练和采样参数 ---
