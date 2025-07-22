@@ -24,6 +24,6 @@ Base ProtT5 Model Used: https://huggingface.co/Rostlab/prot_t5_xl_uniref50
 Fast-Generation Platform (Simplified)
 To address the slow generation speed on the main platform, we have built a separate, faster model based on a simplified Transformer, specifically for the de novo design of peptides.
 
-Online Demo (Generation Only): https://huggingface.co/spaces/chshan/RLAnOxPeptide_nolora
+Online Demo & Model Weights:: https://huggingface.co/spaces/chshan/RLAnOxPeptide_nolora
 
 With this suite of tools, we hope to open new frontiers in the development of next-generation antioxidant therapies and functional health ingredients.
