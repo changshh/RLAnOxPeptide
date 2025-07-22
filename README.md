@@ -12,9 +12,18 @@ Predict the antioxidant activity of their own peptide sequences.
 
 Generate novel antioxidant peptides with desired characteristics.
 
-Of course, here is the English version of the text:
+We have deployed the RLAnOxPeptide project on Hugging Face to provide a powerful and efficient platform for antioxidant peptide analysis and design.
 
-This user-friendly interface, hosted on Hugging Face Spaces, allows for seamless interaction with the RLAnOxPeptide model, making its advanced capabilities accessible to the broad scientific community. The platform provides a powerful and efficient tool for the prediction and de novo design of antioxidant peptides, holding the promise of opening new frontiers in the development of next-generation antioxidant therapies and functional health ingredients.
+Main Platform (Full-Featured)
+This platform offers comprehensive tools for the activity prediction and de novo design of antioxidant peptides. As it is hosted on Hugging Face's free dual-core CPU tier, the peptide generation feature can be slow. The prediction feature is not affected.
 
-Both the online demo platform and the model weights are available at the following Hugging Face link:
-https://huggingface.co/spaces/chshan/RLAnOxPeptide
+Online Demo & Model Weights: https://huggingface.co/spaces/chshan/RLAnOxPeptide
+
+Base ProtT5 Model Used: https://huggingface.co/Rostlab/prot_t5_xl_uniref50
+
+Fast-Generation Platform (Simplified)
+To address the slow generation speed on the main platform, we have built a separate, faster model based on a simplified Transformer, specifically for the de novo design of peptides.
+
+Online Demo (Generation Only): https://huggingface.co/spaces/chshan/RLAnOxPeptide_nolora
+
+With this suite of tools, we hope to open new frontiers in the development of next-generation antioxidant therapies and functional health ingredients.
