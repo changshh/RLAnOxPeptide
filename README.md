@@ -1,4 +1,5 @@
 **RLAnOxPeptide: An Integrated Framework Combining Transformer and RLfor Efficient Antioxidant Peptide Prediction and Innovative Design.**
+[toc_gen.tif](https://github.com/user-attachments/files/24104044/toc_gen.tif)
 
 A groundbreaking integrated framework, RLAnOxPeptide, is poised to accelerate the discovery and design of novel antioxidant peptides. By synergistically combining the power of Transformer architecture and reinforcement learning, this innovative tool offers an efficient solution for both predicting the antioxidant potential of peptides and generating entirely new, high-activity candidates.
 
