@@ -11,8 +11,12 @@ from tqdm import tqdm
 try:
     from transformers import T5EncoderModel, T5Tokenizer
     from peft import PeftModel
-    from antioxidant_predictor_5 import AntioxidantPredictor
-    from feature_extract import extract_features
+    try:
+        from antioxidant_predictor_5 import AntioxidantPredictor
+        from feature_extract import extract_features
+    except ImportError:
+        from train.antioxidant_predictor_5 import AntioxidantPredictor
+        from train.feature_extract import extract_features
 except ImportError as e:
     print(f"导入模块失败，请确保已安装 transformers, peft, scikit-learn, joblib, pandas, torch, biopython。错误: {e}")
     print("同时，请确保 antioxidant_predictor_5.py 和 feature_extract.py 文件在当前目录。")
@@ -142,8 +146,8 @@ if __name__ == "__main__":
     parser.add_argument("--output_file", default="prediction_results_with_lora.csv", help="保存预测结果的CSV文件名。")
     parser.add_argument("--protT5_model_base_path", default="./prott5/model/", help="原始ProtT5模型文件所在的【目录】。")
     parser.add_argument("--lora_adapter_path", default="./lora_finetuned_prott5", help="【必需】已训练好的LoRA适配器所在的【目录】。")
-    parser.add_argument("--model_checkpoint", default="./predictor_with_lora_checkpoints/final_predictor_with_lora.pth", help="已训练的【预测器头部】模型检查点文件(.pth)。")
-    parser.add_argument("--scaler_path", default="/root./predictor_with_lora_checkpoints/scaler_lora.pkl", help="与模型匹配的特征缩放器文件(.pkl)。")
+    parser.add_argument("--model_checkpoint", default="./predictor_sl_checkpoints/final_predictor_sl_only.pth", help="已训练的【预测器头部】模型检查点文件(.pth)。")
+    parser.add_argument("--scaler_path", default="./predictor_sl_checkpoints/scaler_lora.pkl", help="与模型匹配的特征缩放器文件(.pkl)。")
     parser.add_argument("--threshold", type=float, default=0.5, help="判定为正类的概率阈值。")
     parser.add_argument("--batch_size", type=int, default=32, help="预测时的批处理大小。")
     parser.add_argument("--input_dim", type=int, default=1914, help="模型输入的特征维度。")

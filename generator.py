@@ -13,8 +13,12 @@ from peft import PeftModel
 
 # 确保所有自定义模块都可以被导入
 try:
-    from antioxidant_predictor_5 import AntioxidantPredictor
-    from feature_extract import extract_features
+    try:
+        from antioxidant_predictor_5 import AntioxidantPredictor
+        from feature_extract import extract_features
+    except ImportError:
+        from train.antioxidant_predictor_5 import AntioxidantPredictor
+        from train.feature_extract import extract_features
 except ImportError as e:
     print(f"导入模块失败: {e}")
     exit()
@@ -189,10 +193,10 @@ def main():
     parser.add_argument("--output_file", type=str, default="generated_peptides_with_lora.fasta")
     parser.add_argument("--batch_size", type=int, default=200)
     parser.add_argument("--base_model_path", type=str, default="./prott5/model/")
-    parser.add_argument("--generator_lora_path", type=str, default="./generator_with_lora_output/final_lora_generator")
+    parser.add_argument("--generator_lora_path", type=str, default="./generator_with_lora_output_mlp/final_lora_generator")
     parser.add_argument("--validator_lora_path", type=str, default="./lora_finetuned_prott5")
-    parser.add_argument("--predictor_checkpoint", type=str, default="./predictor_with_lora_checkpoints/final_predictor_with_lora.pth")
-    parser.add_argument("--scaler_path", type=str, default="./predictor_with_lora_checkpoints/scaler_lora.pkl")
+    parser.add_argument("--predictor_checkpoint", type=str, default="./predictor_sl_checkpoints/final_predictor_sl_only.pth")
+    parser.add_argument("--scaler_path", type=str, default="./predictor_sl_checkpoints/scaler_lora.pkl")
     parser.add_argument("--input_dim", type=int, default=1914)
     parser.add_argument("--transformer_layers", type=int, default=3)
     parser.add_argument("--transformer_heads", type=int, default=4)
