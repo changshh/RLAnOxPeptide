@@ -192,6 +192,7 @@ dependencies:
   - optuna=4.1.0=pyhd8ed1ab_1
   - packaging=24.2=pyhd8ed1ab_2
   - pandas=2.2.3=py39h3b40f6f_1
+  - xlrd=2.0.1=pyhd8ed1ab_3
   - pango=1.50.14=heaa33ce_1
   - patsy=1.0.1=pyhd8ed1ab_1
   - pcre2=10.44=hba22ea6_2
