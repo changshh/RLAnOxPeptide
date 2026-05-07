@@ -409,7 +409,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--aopp_test_fasta",
         type=str,
-        default="",
+        default=os.path.join(CURRENT_DIR, "Total-test (1).fasta"),
     )
 
     args = parser.parse_args()

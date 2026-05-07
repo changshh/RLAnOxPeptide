@@ -13,6 +13,7 @@ The results have been added as Supplementary Table S9. On the AOPP test set, RLP
 - `run_compare_dedupe_train_antiox_xls_seed_70877.py`: benchmark retraining and evaluation script.
 - `Antiox_dataset.xls`: Excel workbook containing the refined training data and an included test sheet.
 - `test_AnOxPs.txt` and `test_non-AnOxPs.txt`: AnOxPP positive and negative external test sequences.
+- `Total-test (1).fasta`: AOPP external test set.
 - `checkpoints/`: saved seed 70877 predictor checkpoints, scalers, and summary tables.
 - `training_utils.py`: local supervised predictor training helper used by the comparison script.
 
@@ -28,4 +29,4 @@ The script expects the base ProtT5 model at `./prott5/model/` and the LoRA adapt
 
 By default, new outputs are written to `compare/checkpoints/`, which already contains the saved seed 70877 artifacts and result tables. To preserve the archived files while rerunning, pass a different `--output_dir`.
 
-For exact reproduction of the reported AOPP external benchmark, provide the matched AOPP FASTA file with `--aopp_test_fasta`. If this argument is omitted, the script falls back to the `Antiox_test` sheet in `Antiox_dataset.xls` so the code remains runnable with the files included here.
+The script uses `Total-test (1).fasta` as the default AOPP external test set. If a different matched AOPP FASTA is needed, pass it with `--aopp_test_fasta`. If that path is missing, the script falls back to the `Antiox_test` sheet in `Antiox_dataset.xls` so the code remains runnable.
