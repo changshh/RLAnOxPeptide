@@ -14,16 +14,15 @@ import transformers
 from transformers import T5EncoderModel, T5Tokenizer
 from peft import PeftModel
 
-# 确保所有自定义模块都可以被导入
+
 try:
     from feature_extract import ProtT5Model as FeatureProtT5Model, extract_features
     from antioxidant_predictor_5 import AntioxidantPredictor
 except ImportError as e:
-    print(f"导入自定义模块失败: {e}")
-    print("请确保 feature_extract.py, antioxidant_predictor_5.py 文件在PYTHONPATH中或当前目录。")
+    print(f"Operation failed: {e}")
     exit()
 
-# --- 词汇表定义 ---
+
 AMINO_ACIDS_VOCAB = "ACDEFGHIKLMNPQRSTVWY"
 _token2id = {aa: i+2 for i, aa in enumerate(AMINO_ACIDS_VOCAB)}
 _token2id["<PAD>"] = 0
@@ -33,28 +32,25 @@ GENERATOR_VOCAB_SIZE = len(_token2id)
 
 
 # ==============================================================================
-# --- 1. 核心模型与辅助函数定义 ---
+
 # ==============================================================================
 class AdvancedProtT5Generator(nn.Module):
-    """
-    使用LoRA增强的ProtT5作为骨干网络的生成器模型。
-    """
     def __init__(self, base_model_path, lora_adapter_path, vocab_size):
         super(AdvancedProtT5Generator, self).__init__()
-        
-        print(f"  - 正在加载基础ProtT5模型: {base_model_path}")
+
+        print(f"Loading base ProtT5 model: {base_model_path}")
         base_model = T5EncoderModel.from_pretrained(base_model_path)
 
-        print(f"  - 正在加载并应用LoRA适配器: {lora_adapter_path}")
+        print(f"Loading LoRA adapter: {lora_adapter_path}")
         self.backbone = PeftModel.from_pretrained(base_model, lora_adapter_path)
-        
+
         embed_dim = self.backbone.config.d_model
         self.lm_head = nn.Linear(embed_dim, vocab_size)
-        
+
         self.vocab_size = vocab_size
         self.eos_token_id = _token2id["<EOS>"]
         self.pad_token_id = _token2id["<PAD>"]
-        print("  - 高级生成器初始化完成。")
+        print("Generator initialized.")
 
     def forward(self, input_ids):
         attention_mask = (input_ids != self.pad_token_id).int()
@@ -73,7 +69,7 @@ class AdvancedProtT5Generator(nn.Module):
         for i in range(max_length - 1):
             logits = self.forward(generated_ids)
             next_token_logits = logits[:, -1, :] / (temperature + 1e-8)
-            
+
             if generated_ids.size(1) < min_peptide_len:
                 next_token_logits[:, self.eos_token_id] = -float("inf")
 
@@ -84,7 +80,7 @@ class AdvancedProtT5Generator(nn.Module):
                             next_token_logits[b, token_id_in_seq] *= repetition_penalty
                         else:
                             next_token_logits[b, token_id_in_seq] /= repetition_penalty
-            
+
             if top_k > 0:
                 indices_to_remove = next_token_logits < torch.topk(next_token_logits, top_k)[0][..., -1, None]
                 next_token_logits[indices_to_remove] = -float('Inf')
@@ -101,16 +97,16 @@ class AdvancedProtT5Generator(nn.Module):
             probs = torch.softmax(next_token_logits, dim=-1)
             dist = torch.distributions.Categorical(probs)
             next_token = dist.sample()
-            
+
             log_prob = dist.log_prob(next_token)
             entropy = dist.entropy()
             log_probs_list.append(log_prob * (~eos_generated))
             entropy_list.append(entropy * (~eos_generated))
-            
+
             generated_ids = torch.cat((generated_ids, next_token.unsqueeze(1)), dim=1)
             eos_generated = eos_generated | (next_token == self.eos_token_id)
             if eos_generated.all(): break
-        
+
         total_log_prob = torch.stack(log_probs_list, dim=1).sum(dim=1) if log_probs_list else torch.zeros(batch_size, device=device)
         avg_entropy = torch.stack(entropy_list, dim=1).mean(dim=1) if entropy_list else torch.zeros(batch_size, device=device)
         return generated_ids, total_log_prob, avg_entropy
@@ -214,44 +210,44 @@ class LoRAFeatureExtractorWrapper:
         return embedding.squeeze(0).cpu().numpy()
 
 # ==============================================================================
-# --- 主执行流程 ---
+
 # ==============================================================================
 def main(args):
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"使用设备: {args.device}")
+    print(f"Using device: {args.device}")
     np.random.seed(args.seed); torch.manual_seed(args.seed)
     if torch.cuda.is_available(): torch.cuda.manual_seed_all(args.seed)
     os.makedirs(args.output_dir, exist_ok=True)
 
-    print("\n=== 步骤 1: 初始化带LoRA的生成器模型 ===")
+    print("Initializing generator.")
     generator = AdvancedProtT5Generator(
         base_model_path=args.base_model_path,
         lora_adapter_path=args.lora_adapter_path,
         vocab_size=GENERATOR_VOCAB_SIZE
     ).to(args.device)
-    
+
     optimizer = optim.AdamW(filter(lambda p: p.requires_grad, generator.parameters()), lr=args.generator_lr)
-    
-    print("\n=== 步骤 2: 加载用于奖励计算的验证器 ===")
+
+    print("Loading validator and scaler.")
     validator = load_classifier_model(args.classifier_model_path, args.classifier_input_dim, args.device)
     scaler = joblib.load(args.scaler_path)
-    
+
     feature_extractor_wrapper = LoRAFeatureExtractorWrapper(generator.backbone, T5Tokenizer.from_pretrained(args.base_model_path), args.device)
 
-    print(f"\n=== 步骤 3: 强化学习与监督学习交替训练 ===")
+    print("Loading supervised peptide dataset.")
     sup_dataset = PeptideDataset(fasta_file=args.train_peptides_fasta, max_len=args.max_seq_len + 1)
     sup_dataloader = DataLoader(sup_dataset, batch_size=args.sup_batch_size, shuffle=True)
     train_sequences_for_novelty = set(sup_dataset.sequences)
 
     baseline_reward = torch.tensor(0.0, device=args.device)
-    print(f"开始训练 {args.num_epochs} epochs...")
+    print(f"Starting alternating RL/SL training for {args.num_epochs} epochs.")
     loss_fn = nn.CrossEntropyLoss(ignore_index=_token2id["<PAD>"])
     for epoch in range(args.num_epochs):
         print(f"\n[Epoch {epoch+1}/{args.num_epochs}]")
         generator.train()
         rl_loss_accum = 0.0
         rl_loss_count = 0
-        
+
         # --- RL Step ("Yang") ---
         for _ in tqdm(range(args.num_rl_steps_per_epoch), desc=f"Epoch {epoch+1} RL"):
             optimizer.zero_grad()
@@ -259,7 +255,7 @@ def main(args):
             decoded_seqs = generator.decode(gen_ids)
             probs = batch_predict(validator, decoded_seqs, feature_extractor_wrapper, scaler, args.device)
             rewards = compute_reward(decoded_seqs, probs, train_sequences_for_novelty, args)
-            
+
             baseline_reward = 0.9 * baseline_reward + 0.1 * rewards.mean()
             rl_loss = - (log_probs * (rewards - baseline_reward)).mean() - args.entropy_coef * entropies.mean()
             rl_loss.backward()
@@ -293,50 +289,50 @@ def main(args):
         eval_decoded = generator.decode(eval_ids)
         eval_probs = batch_predict(validator, eval_decoded, feature_extractor_wrapper, scaler, args.device)
         eval_stats = compute_generation_stats(eval_decoded, eval_probs)
-        print(f"  [评估 Epoch {epoch+1}] AvgLen={eval_stats['average_length']:.2f}, AvgProb={eval_stats['predicted_prob_mean']:.3f}, Uniq%={eval_stats['unique_ratio']*100:.1f}")
-        
+        print(f"  [Eval Epoch {epoch+1}] AvgLen={eval_stats['average_length']:.2f}, AvgProb={eval_stats['predicted_prob_mean']:.3f}, Uniq%={eval_stats['unique_ratio']*100:.1f}")
+
         if (epoch + 1) % args.save_every_epochs == 0:
             output_path = os.path.join(args.output_dir, f"epoch_{epoch+1}")
             generator.backbone.save_pretrained(output_path)
             torch.save(generator.lm_head.state_dict(), os.path.join(output_path, "lm_head.pth"))
-            print(f"  - 已保存 checkpoint 至 {output_path}")
+            print(f"Checkpoint saved to: {output_path}")
 
-    print("\n=== 步骤 4: 保存并评估最终模型 ===")
+    print("Saving final generator.")
     final_output_path = os.path.join(args.output_dir, "final_lora_generator")
     generator.backbone.save_pretrained(final_output_path)
     torch.save(generator.lm_head.state_dict(), os.path.join(final_output_path, "lm_head.pth"))
-    print(f"最终模型（适配器+LM头）已保存至: {final_output_path}")
-    
+    print(f"Final model saved to: {final_output_path}")
+
     # Final Large Scale Generation and Evaluation
-    print("\n--- 开始最终生成和评估 ---")
+    print("Generating final ranked peptide candidates.")
     generator.eval()
     with torch.no_grad():
         final_sample_ids,_,_ = generator.sample(args.num_final_samples, args.max_seq_len, args.device)
     final_decoded_seqs = generator.decode(final_sample_ids)
     final_clf_probs = batch_predict(validator, final_decoded_seqs, feature_extractor_wrapper, scaler, args.device)
-    
+
     results_df = pd.DataFrame({'sequence':final_decoded_seqs, 'predicted_probability':final_clf_probs}).dropna().sort_values('predicted_probability', ascending=False)
     output_csv_path = os.path.join(args.output_dir, "generated_peptides_lora_ranked.csv")
     results_df.to_csv(output_csv_path, index=False)
-    print(f"\n最终生成 {len(results_df)} 条有效序列保存至: {output_csv_path}")
+    print(f"Generated sequences saved to: {output_csv_path}")
 
     final_stats = compute_generation_stats(results_df['sequence'].tolist(), results_df['predicted_probability'].tolist())
-    print("\n最终生成序列评价指标：")
+    print("Final generation statistics:")
     for k,v in final_stats.items():
         print(f"  - {k.replace('_',' ').capitalize()}: {v:.4f}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="使用LoRA微调后的ProtT5作为骨干进行序列生成训练。")
-    
-    # --- 路径参数 ---
+    parser = argparse.ArgumentParser(description='Run the RLAnOxPeptide workflow.')
+
+
     parser.add_argument("--base_model_path", type=str, default="./prott5/model/")
     parser.add_argument("--lora_adapter_path", type=str, default="./lora_finetuned_prott5")
     parser.add_argument("--classifier_model_path", type=str, default="./predictor_sl_checkpoints/final_predictor_sl_only.pth")
     parser.add_argument("--scaler_path", type=str, default="./predictor_sl_checkpoints/scaler_lora.pkl")
     parser.add_argument("--train_peptides_fasta", type=str, default="./data/remaining_positive.fasta")
     parser.add_argument("--output_dir", type=str, default="./generator_with_lora_output_mlp")
-    
-    # --- 训练和采样参数 ---
+
+
     parser.add_argument("--generator_lr", type=float, default=1e-5)
     parser.add_argument("--num_epochs", type=int, default=400)
     parser.add_argument("--num_rl_steps_per_epoch", type=int, default=10)
@@ -363,6 +359,6 @@ if __name__ == "__main__":
     parser.add_argument("--eval_batch_size", type=int, default=100)
     parser.add_argument("--num_final_samples", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=42)
-    
+
     args = parser.parse_args()
     main(args)
