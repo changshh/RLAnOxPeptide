@@ -23,14 +23,12 @@ except ImportError as e:
     print(f"Import failed: {e}")
     raise
 
-
 AMINO_ACIDS_VOCAB = "ACDEFGHIKLMNPQRSTVWY"
 _token2id = {aa: i + 2 for i, aa in enumerate(AMINO_ACIDS_VOCAB)}
 _token2id["<PAD>"] = 0
 _token2id["<EOS>"] = 1
 _id2token = {i: t for t, i in _token2id.items()}
 VOCAB_SIZE = len(_token2id)
-
 
 class AdvancedProtT5Generator(nn.Module):
     def __init__(self, base_model_path, lora_adapter_path, vocab_size):
@@ -86,7 +84,6 @@ class AdvancedProtT5Generator(nn.Module):
             seqs.append(seq)
         return seqs
 
-
 class LoRAProtT5Extractor:
     def __init__(self, base_model_path, lora_adapter_path):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -103,7 +100,6 @@ class LoRAProtT5Extractor:
         with torch.no_grad():
             embedding = self.model(**encoded_input).last_hidden_state
         return embedding.squeeze(0).cpu().numpy()
-
 
 def generate_unique_sequences(generator, device, num_seq, min_length, max_length, temperature, batch_size):
     generator.eval()
@@ -129,7 +125,6 @@ def generate_unique_sequences(generator, device, num_seq, min_length, max_length
             pbar.update(len(unique_seqs) - initial_count)
     return list(unique_seqs)[:num_seq]
 
-
 def run_validation_batch(classifier_model, seq_list, feature_prott5_instance, scaler_instance, device):
     if not seq_list:
         return [None] * len(seq_list)
@@ -146,7 +141,6 @@ def run_validation_batch(classifier_model, seq_list, feature_prott5_instance, sc
     except Exception as e:
         print(f"Validation batch failed: {e}")
         return [None] * len(seq_list)
-
 
 def cluster_sequences(generator, sequences, num_clusters, device):
     if not sequences or len(sequences) < num_clusters:
@@ -179,13 +173,11 @@ def cluster_sequences(generator, sequences, num_clusters, device):
         reps.append(sequences[rep_idx])
     return reps
 
-
 def save_to_fasta_with_prob(results, output_path):
     with open(output_path, "w") as f:
         for i, (seq, prob) in enumerate(results):
             f.write(f">seq_{i + 1}|probability={prob:.4f}\n")
             f.write(seq + "\n")
-
 
 def main():
     parser = argparse.ArgumentParser(description="Generate antioxidant peptide candidates with the LoRA generator.")
@@ -273,7 +265,6 @@ def main():
     save_to_fasta_with_prob(final_results_to_save, args.output_file)
     print(f"Generated and validated {len(final_results_to_save)} sequences.")
     print(f"Final results saved to: {args.output_file}")
-
 
 if __name__ == "__main__":
     main()

@@ -14,14 +14,12 @@ import transformers
 from transformers import T5EncoderModel, T5Tokenizer
 from peft import PeftModel
 
-
 try:
     from feature_extract import ProtT5Model as FeatureProtT5Model, extract_features
     from antioxidant_predictor_5 import AntioxidantPredictor
 except ImportError as e:
     print(f"Operation failed: {e}")
     exit()
-
 
 AMINO_ACIDS_VOCAB = "ACDEFGHIKLMNPQRSTVWY"
 _token2id = {aa: i+2 for i, aa in enumerate(AMINO_ACIDS_VOCAB)}
@@ -30,10 +28,6 @@ _token2id["<EOS>"] = 1
 _id2token = {i: t for t, i in _token2id.items()}
 GENERATOR_VOCAB_SIZE = len(_token2id)
 
-
-# ==============================================================================
-
-# ==============================================================================
 class AdvancedProtT5Generator(nn.Module):
     def __init__(self, base_model_path, lora_adapter_path, vocab_size):
         super(AdvancedProtT5Generator, self).__init__()
@@ -209,9 +203,6 @@ class LoRAFeatureExtractorWrapper:
             embedding = self.model(**encoded_input).last_hidden_state
         return embedding.squeeze(0).cpu().numpy()
 
-# ==============================================================================
-
-# ==============================================================================
 def main(args):
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {args.device}")
@@ -324,14 +315,12 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the RLAnOxPeptide workflow.')
 
-
     parser.add_argument("--base_model_path", type=str, default="./prott5/model/")
     parser.add_argument("--lora_adapter_path", type=str, default="./lora_finetuned_prott5")
     parser.add_argument("--classifier_model_path", type=str, default="./predictor_sl_checkpoints/final_predictor_sl_only.pth")
     parser.add_argument("--scaler_path", type=str, default="./predictor_sl_checkpoints/scaler_lora.pkl")
     parser.add_argument("--train_peptides_fasta", type=str, default="./data/remaining_positive.fasta")
     parser.add_argument("--output_dir", type=str, default="./generator_with_lora_output_mlp")
-
 
     parser.add_argument("--generator_lr", type=float, default=1e-5)
     parser.add_argument("--num_epochs", type=int, default=400)

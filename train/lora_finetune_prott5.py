@@ -13,7 +13,6 @@ from transformers import (
 )
 from peft import get_peft_model, LoraConfig
 
-
 class T5EncoderForMLM(nn.Module):
     def __init__(self, base_model, tokenizer):
         super().__init__()
@@ -27,7 +26,6 @@ class T5EncoderForMLM(nn.Module):
             input_ids=input_ids,
             attention_mask=attention_mask
         ).last_hidden_state
-
 
         logits = self.lm_head(encoder_outputs)
 
@@ -44,7 +42,6 @@ def main(args):
     model = T5EncoderModel.from_pretrained(args.base_model_path, device_map='auto')
     tokenizer = T5Tokenizer.from_pretrained(args.base_model_path, do_lower_case=False)
 
-
     print("Adding mask token to tokenizer...")
     mask_token = "<MASK>"
     if mask_token not in tokenizer.additional_special_tokens:
@@ -54,7 +51,6 @@ def main(args):
     tokenizer.mask_token = mask_token
     tokenizer.mask_token_id = tokenizer.convert_tokens_to_ids(mask_token)
     print(f"Tokenizer's mask token set to '{tokenizer.mask_token}' (ID: {tokenizer.mask_token_id})")
-
 
     print("Configuring LoRA...")
     lora_config = LoraConfig(
@@ -70,7 +66,6 @@ def main(args):
     lora_encoder.print_trainable_parameters()
 
     mlm_model = T5EncoderForMLM(lora_encoder, tokenizer)
-
 
     print(f"Loading and processing dataset from: {args.dataset_path}")
     df = pd.read_csv(args.dataset_path)
@@ -107,7 +102,6 @@ def main(args):
         mlm_probability=0.15
     )
 
-
     print("Setting up training arguments...")
     training_args = TrainingArguments(
         output_dir=args.output_dir,
@@ -132,20 +126,16 @@ def main(args):
     print("\n--- Starting LoRA fine-tuning ---")
     trainer.train()
 
-
     print("\nFine-tuning complete. Saving LoRA adapters...")
     mlm_model.encoder.save_pretrained(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
     print(f"LoRA adapters and tokenizer saved to: {args.output_dir}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the RLAnOxPeptide workflow.')
 
     parser.add_argument("--base_model_path", type=str, default="./prott5/model/", help='See README for details.')
     parser.add_argument("--dataset_path", type=str, default="./data/AODB_PROTEIN.csv", help='See README for details.')
-
-
 
     parser.add_argument("--output_dir", type=str, default="./lora_finetuned_prott5", help='See README for details.')
 

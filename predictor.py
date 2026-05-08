@@ -22,7 +22,6 @@ except ImportError as e:
     print(f"Import failed. Check transformers, peft, scikit-learn, joblib, pandas, torch, and biopython: {e}")
     raise
 
-
 def parse_fasta(fasta_file):
     """Parse FASTA records into (header, sequence) tuples."""
     sequences_data = []
@@ -54,7 +53,6 @@ def parse_fasta(fasta_file):
         print(f"No sequences were parsed from FASTA file: {fasta_file}")
     return sequences_data
 
-
 class LoRAProtT5Extractor:
     """Load a ProtT5 encoder with a LoRA adapter and expose an encode method."""
 
@@ -81,7 +79,6 @@ class LoRAProtT5Extractor:
         with torch.no_grad():
             embedding = self.model(**encoded_input).last_hidden_state
         return embedding.squeeze(0).cpu().numpy()
-
 
 def predict_fasta_with_lora(args):
     seq_records = parse_fasta(args.fasta_file)
@@ -154,7 +151,6 @@ def predict_fasta_with_lora(args):
     df.sort_values(by="predicted_probability", ascending=False, inplace=True)
     df.to_csv(args.output_file, index=False)
     print(f"Prediction results saved to: {args.output_file}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Predict antioxidant peptide activity from a FASTA file.")

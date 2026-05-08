@@ -3,7 +3,6 @@
 import torch
 import torch.nn as nn
 
-
 class AntioxidantPredictor(nn.Module):
     def __init__(self, input_dim, transformer_layers=3, transformer_heads=4, transformer_dropout=0.1):
         super(AntioxidantPredictor, self).__init__()

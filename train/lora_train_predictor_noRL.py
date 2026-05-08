@@ -24,7 +24,6 @@ except ImportError as e:
     print(f"Import failed. Check local training modules and dependencies: {e}")
     raise
 
-
 class LoRAProtT5Extractor:
     def __init__(self, base_model_path, lora_adapter_path):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -55,7 +54,6 @@ class LoRAProtT5Extractor:
         with torch.no_grad():
             embedding = self.model(**encoded_input).last_hidden_state
         return embedding.squeeze(0).cpu().numpy()
-
 
 def prepare_features_with_lora(neg_fasta, pos_fasta, prott5_extractor_instance):
     print("Loading FASTA training data.")
@@ -98,7 +96,6 @@ def prepare_features_with_lora(neg_fasta, pos_fasta, prott5_extractor_instance):
 
     return X_train_scaled, X_val_scaled, np.array(train_labels), np.array(val_labels), scaler
 
-
 class TemperatureCalibrator:
     def __init__(self, model, device):
         self.model = model
@@ -124,7 +121,6 @@ class TemperatureCalibrator:
         self.model.temperature.requires_grad = False
         return self.model
 
-
 def evaluate_model_with_threshold_custom(model, X, y, threshold):
     model.eval()
     device = next(model.parameters()).device
@@ -140,7 +136,6 @@ def evaluate_model_with_threshold_custom(model, X, y, threshold):
     acc = accuracy_score(y, preds)
     print(f"Evaluation (T={current_temp:.2f}, thr={threshold}): AUC={auc:.4f}, F1={f1:.4f}, Prec={prec:.4f}, Rec={rec:.4f}, Acc={acc:.4f}")
     return {"AUC-ROC": auc, "F1-Score": f1, "Precision": prec, "Recall": rec, "Accuracy": acc}
-
 
 def train_feature_fusion_classifier(X_train, y_train, X_val, y_val, finetune_params):
     model = AntioxidantPredictor(
@@ -227,7 +222,6 @@ def train_feature_fusion_classifier(X_train, y_train, X_val, y_val, finetune_par
         model.load_state_dict(best_state)
     return model
 
-
 def supervised_training(X_train, y_train, X_val, y_val, params, calibrate_temp=True):
     print("Starting supervised predictor training.")
     model = train_feature_fusion_classifier(X_train, y_train, X_val, y_val, params)
@@ -239,7 +233,6 @@ def supervised_training(X_train, y_train, X_val, y_val, params, calibrate_temp=T
         print("Calibration finished.")
     val_metrics = evaluate_model_with_threshold_custom(model, X_val, y_val, params["threshold"])
     return model, val_metrics
-
 
 def main(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -302,7 +295,6 @@ def main(args):
         print(f"Independent test set not found: {args.independent_test_fasta}. Skipping final evaluation.")
 
     print("Training and evaluation completed.")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train the supervised RLAnOxPeptide predictor.")
